@@ -10,6 +10,7 @@ import { PlantSelector } from "@/components/planner/PlantSelector";
 import { BedToolbar } from "@/components/planner/BedToolbar";
 import { Modal, Button } from "@/components/ui";
 import { PLANT_MAP } from "@/lib/plants";
+import { analyzeDimensionChange } from "@/lib/bedUtils";
 import type { Bed, CellData } from "@/types";
 
 function PlannerPageContent() {
@@ -38,6 +39,21 @@ function PlannerPageContent() {
   const [selectedPlantCell, setSelectedPlantCell] = useState<{
     row: number;
     col: number;
+  } | null>(null);
+  const [dimensionWarning, setDimensionWarning] = useState<{
+    bedData: {
+      name: string;
+      widthFt: number;
+      lengthFt: number;
+      sunExposure: string;
+      gardenType: string;
+      color: string;
+    };
+    analysis: {
+      affectedPlants: Array<{ key: string; plantId: string; row: number; col: number }>;
+      willLosePlants: boolean;
+      plantCount: number;
+    };
   } | null>(null);
 
   const activeBed = beds.find((bed) => bed.id === activeBedId) || null;
@@ -81,6 +97,27 @@ function PlannerPageContent() {
   }) => {
     if (!editingBed) return;
 
+    // Check if dimensions are changing and if it affects plants
+    const dimensionsChanged =
+      bedData.widthFt !== editingBed.widthFt ||
+      bedData.lengthFt !== editingBed.lengthFt;
+
+    if (dimensionsChanged) {
+      const analysis = analyzeDimensionChange(
+        editingBed,
+        bedData.widthFt,
+        bedData.lengthFt
+      );
+
+      // If plants will be affected, show warning
+      if (analysis.willLosePlants) {
+        setDimensionWarning({ bedData, analysis });
+        setCreateModalOpen(false);
+        return;
+      }
+    }
+
+    // No dimension issues, proceed with update
     try {
       await updateBed(editingBed.id, bedData);
       setEditingBed(null);
@@ -88,6 +125,24 @@ function PlannerPageContent() {
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to update bed");
     }
+  };
+
+  const handleConfirmDimensionChange = async () => {
+    if (!editingBed || !dimensionWarning) return;
+
+    try {
+      await updateBed(editingBed.id, dimensionWarning.bedData);
+      setEditingBed(null);
+      setDimensionWarning(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to update bed");
+    }
+  };
+
+  const handleCancelDimensionChange = () => {
+    // Reopen the edit modal so user can adjust
+    setDimensionWarning(null);
+    setCreateModalOpen(true);
   };
 
   const handleDeleteBed = async () => {
@@ -363,6 +418,63 @@ function PlannerPageContent() {
                 className="bg-red-600 hover:bg-red-700"
               >
                 Remove Plant
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Dimension Change Warning Modal */}
+      {dimensionWarning && (
+        <Modal
+          open={!!dimensionWarning}
+          onClose={() => setDimensionWarning(null)}
+        >
+          <div className="p-6">
+            <h2 className="text-2xl font-serif text-sage-700 mb-4">
+              ⚠️ Plants Will Be Affected
+            </h2>
+
+            <div className="mb-6 space-y-3">
+              <p className="text-sage-700">
+                Changing the bed dimensions will affect{" "}
+                <strong>{dimensionWarning.analysis.affectedPlants.length}</strong>{" "}
+                of your <strong>{dimensionWarning.analysis.plantCount}</strong>{" "}
+                planted {dimensionWarning.analysis.plantCount === 1 ? "item" : "items"}.
+              </p>
+
+              <div className="bg-sage-50 border border-sage-200 rounded-md p-4">
+                <p className="font-medium text-sage-700 mb-2">
+                  These plants will be removed:
+                </p>
+                <ul className="space-y-1">
+                  {dimensionWarning.analysis.affectedPlants.map((plant) => {
+                    const plantInfo = PLANT_MAP[plant.plantId];
+                    return (
+                      <li key={plant.key} className="text-sage-600 text-sm">
+                        {plantInfo?.emoji} {plantInfo?.name} at position ({plant.row}, {plant.col})
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              <p className="text-sm text-sage-600">
+                <strong>Note:</strong> These plants are outside the new bed dimensions
+                and cannot be automatically repositioned. You will need to replant them manually.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <Button onClick={handleCancelDimensionChange} variant="outline">
+                Cancel - Keep Current Size
+              </Button>
+              <Button
+                onClick={handleConfirmDimensionChange}
+                variant="primary"
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Proceed - Remove Plants
               </Button>
             </div>
           </div>

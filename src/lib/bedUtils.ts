@@ -128,3 +128,150 @@ export function parseCellKey(key: string): { row: number; col: number } {
   const [row, col] = key.split("_").map(Number);
   return { row, col };
 }
+
+/**
+ * Analyze dimension changes and determine which plants will be affected.
+ * Returns information about plants that will be lost and those that can be kept.
+ */
+export function analyzeDimensionChange(
+  bed: Bed,
+  newWidth: number,
+  newLength: number
+): {
+  affectedPlants: Array<{ key: string; plantId: string; row: number; col: number }>;
+  willLosePlants: boolean;
+  plantCount: number;
+} {
+  const affectedPlants: Array<{ key: string; plantId: string; row: number; col: number }> = [];
+  let plantCount = 0;
+
+  // Find all anchor cells (actual plants, not overflow cells)
+  for (const [key, cell] of Object.entries(bed.cells)) {
+    if (cell.isAnchor) {
+      plantCount++;
+      const { row, col } = parseCellKey(key);
+
+      // Check if this plant will be out of bounds
+      if (row >= newLength || col >= newWidth) {
+        affectedPlants.push({ key, plantId: cell.plantId, row, col });
+      }
+    }
+  }
+
+  return {
+    affectedPlants,
+    willLosePlants: affectedPlants.length > 0,
+    plantCount,
+  };
+}
+
+/**
+ * Attempt to auto-reposition plants when dimensions change.
+ * Returns updated cells with plants moved to available spots when possible.
+ */
+export function attemptAutoReposition(
+  bed: Bed,
+  newWidth: number,
+  newLength: number,
+  plantMap: Record<string, Plant>
+): {
+  cells: Bed["cells"];
+  repositioned: Array<{ plantId: string; from: string; to: string }>;
+  lost: Array<{ plantId: string; at: string }>;
+} {
+  const repositioned: Array<{ plantId: string; from: string; to: string }> = [];
+  const lost: Array<{ plantId: string; at: string }> = [];
+
+  // Start with empty cells for the new dimensions
+  const newCells: Bed["cells"] = {};
+
+  // Create a temporary bed object for canPlant checks
+  const tempBed: Bed = {
+    ...bed,
+    widthFt: newWidth,
+    lengthFt: newLength,
+    cells: newCells,
+  };
+
+  // First, keep all plants that are still in bounds
+  for (const [key, cell] of Object.entries(bed.cells)) {
+    if (!cell.isAnchor) continue; // Only process anchor cells
+
+    const { row, col } = parseCellKey(key);
+    const plant = plantMap[cell.plantId];
+
+    if (!plant) continue;
+
+    // Check if plant is still in bounds and has space
+    if (row < newLength && col < newWidth) {
+      const { rows, cols } = calculateCellsNeeded(plant.spacingIn, bed.gardenType);
+
+      // Check if all cells needed are still in bounds
+      if (row + rows <= newLength && col + cols <= newWidth) {
+        // Plant fits in its current position
+        const anchorKey = cellKey(row, col);
+        newCells[anchorKey] = { plantId: plant.id, isAnchor: true };
+
+        // Add overflow cells
+        for (let r = row; r < row + rows; r++) {
+          for (let c = col; c < col + cols; c++) {
+            const k = cellKey(r, c);
+            if (k !== anchorKey) {
+              newCells[k] = {
+                plantId: plant.id,
+                isAnchor: false,
+                anchorCell: anchorKey,
+              };
+            }
+          }
+        }
+        continue;
+      }
+    }
+
+    // Plant doesn't fit at current position, try to find a new spot
+    let foundSpot = false;
+
+    for (let r = 0; r < newLength; r++) {
+      for (let c = 0; c < newWidth; c++) {
+        if (canPlant({ ...tempBed, cells: newCells }, r, c, plant)) {
+          // Found a spot!
+          const { rows, cols } = calculateCellsNeeded(plant.spacingIn, bed.gardenType);
+          const newAnchorKey = cellKey(r, c);
+
+          newCells[newAnchorKey] = { plantId: plant.id, isAnchor: true };
+
+          // Add overflow cells
+          for (let rr = r; rr < r + rows; rr++) {
+            for (let cc = c; cc < c + cols; cc++) {
+              const k = cellKey(rr, cc);
+              if (k !== newAnchorKey) {
+                newCells[k] = {
+                  plantId: plant.id,
+                  isAnchor: false,
+                  anchorCell: newAnchorKey,
+                };
+              }
+            }
+          }
+
+          repositioned.push({
+            plantId: plant.id,
+            from: key,
+            to: newAnchorKey,
+          });
+
+          foundSpot = true;
+          break;
+        }
+      }
+      if (foundSpot) break;
+    }
+
+    if (!foundSpot) {
+      lost.push({ plantId: plant.id, at: key });
+    }
+  }
+
+  return { cells: newCells, repositioned, lost };
+}
