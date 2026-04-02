@@ -3,7 +3,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import type { SunExposure, CellData, GardenType } from "@/types";
 
-// Required for Next.js 15 cookies() API
+// NOTE: @auth0/nextjs-auth0@3.5.0 causes Next.js 15 cookies warnings
+// This doesn't break functionality, but generates console warnings
+// Resolution: Migrate to Auth0 v4 when migration path is clearer
 export const dynamic = 'force-dynamic';
 
 type RouteContext = {

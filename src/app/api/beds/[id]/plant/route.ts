@@ -23,6 +23,9 @@ type RouteContext = {
  */
 export async function POST(request: Request, context: RouteContext) {
   try {
+    // NOTE: Auth0 v3.5.0 uses cookies() synchronously, causing warnings in Next.js 15
+    // This is a known compatibility issue. The app still works correctly.
+    // Resolution: Upgrade to @auth0/nextjs-auth0 v4+ when available/documented
     const session = await getSession();
 
     if (!session?.user) {
