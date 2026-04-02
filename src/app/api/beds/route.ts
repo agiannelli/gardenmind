@@ -3,6 +3,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import type { SunExposure, GardenType } from "@/types";
 
+// Required for Next.js 15 cookies() API
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/beds
  * List all beds for the current user

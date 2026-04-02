@@ -152,6 +152,43 @@ function PlannerPageContent() {
     }
   };
 
+  const handleMovePlant = async (
+    fromRow: number,
+    fromCol: number,
+    toRow: number,
+    toCol: number
+  ) => {
+    if (!activeBed) return;
+
+    try {
+      // Get the plant at the source cell
+      const sourceKey = `${fromRow}_${fromCol}`;
+      const sourceCell = activeBed.cells[sourceKey];
+
+      if (!sourceCell || !sourceCell.isAnchor) {
+        alert("Can only move anchor cells");
+        return;
+      }
+
+      // Check if target cell is empty
+      const targetKey = `${toRow}_${toCol}`;
+      if (activeBed.cells[targetKey]) {
+        alert("Target cell is occupied");
+        return;
+      }
+
+      const plantId = sourceCell.plantId;
+
+      // Remove from old location
+      await removeFromCell(activeBed.id, fromRow, fromCol);
+
+      // Plant at new location
+      await plantInCell(activeBed.id, toRow, toCol, plantId);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to move plant");
+    }
+  };
+
   const getPlantInfo = () => {
     if (!activeBed || !selectedPlantCell) return null;
 
@@ -207,7 +244,11 @@ function PlannerPageContent() {
             onDelete={() => setDeleteModalOpen(true)}
           />
           <div className="flex-1 overflow-auto">
-            <BedGrid bed={activeBed} onCellClick={handleCellClick} />
+            <BedGrid
+              bed={activeBed}
+              onCellClick={handleCellClick}
+              onMovePlant={handleMovePlant}
+            />
           </div>
         </>
       )}

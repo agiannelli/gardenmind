@@ -10,6 +10,9 @@ import {
 } from "@/lib/bedUtils";
 import type { CellData, Bed, SunExposure, GardenType } from "@/types";
 
+// Required for Next.js 15 cookies() API
+export const dynamic = 'force-dynamic';
+
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
