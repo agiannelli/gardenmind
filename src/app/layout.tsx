@@ -5,7 +5,6 @@ import "@/styles/globals.css";
 export const metadata: Metadata = {
   title: "GardenMind",
   description: "Plan, plot and manage your garden with AI-powered advice.",
-  icons: { icon: "/favicon.ico" },
 };
 
 export default function RootLayout({
