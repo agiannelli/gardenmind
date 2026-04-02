@@ -2,16 +2,27 @@
 
 export type SunExposure = "full-sun" | "partial-sun" | "full-shade";
 
+export type GardenType = "traditional" | "square-foot" | "intensive";
+
+export interface CellData {
+  plantId: string;
+  isAnchor: boolean;
+  anchorCell?: string; // For overflow cells, points to anchor (e.g., "0_0")
+}
+
 export interface Bed {
   id: string;
+  userId: string;
   name: string;
   widthFt: number;
   lengthFt: number;
   sunExposure: SunExposure;
+  gardenType: GardenType;
   color: string;
-  /** key: "row_col", value: plant id */
-  cells: Record<string, string>;
+  /** key: "row_col", value: CellData */
+  cells: Record<string, CellData>;
   createdAt: string;
+  updatedAt: string;
 }
 
 // ─── Plants ───────────────────────────────────────────────────────────────────

@@ -1,0 +1,26 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Bed {
+  id          String   @id @default(cuid())
+  userId      String   // Auth0 user sub
+  name        String
+  widthFt     Int      // Width in feet
+  lengthFt    Int      // Length in feet
+  sunExposure String   // "full-sun" | "partial-sun" | "full-shade"
+  gardenType  String   @default("square-foot")  // "traditional" | "square-foot" | "intensive"
+  color       String   // Hex color code
+  cells       Json     @default("{}")  // Record<string, CellData>
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
