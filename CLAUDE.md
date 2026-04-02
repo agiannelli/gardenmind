@@ -15,6 +15,17 @@ AI-powered garden planning app. Next.js 15, TypeScript, Tailwind, Auth0, Anthrop
 - **No surprises**: Alert users to destructive actions (dimension changes removing plants, deleting beds, etc.)
 - **Friendly defaults**: Make the app extremely user-friendly while respecting user control
 
+## Deployment (Vercel)
+Required environment variables:
+- `DATABASE_URL` — PostgreSQL connection string (use Vercel Postgres or external)
+- `AUTH0_SECRET` — Generate with: `openssl rand -hex 32`
+- `AUTH0_BASE_URL` — Your Vercel deployment URL (e.g., https://gardenmind.vercel.app)
+- `AUTH0_ISSUER_BASE_URL` — Your Auth0 tenant URL
+- `AUTH0_CLIENT_ID` — From Auth0 application settings
+- `AUTH0_CLIENT_SECRET` — From Auth0 application settings
+
+The `postinstall` script automatically runs `prisma generate` during deployment.
+
 ## Rules
 - All Claude API calls go through src/app/api/ai/ — never client-side
 - Auth is Auth0 via @auth0/nextjs-auth0 — middleware protects (app) routes
