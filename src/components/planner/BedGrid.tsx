@@ -11,6 +11,11 @@ interface BedGridProps {
   onMovePlant?: (fromRow: number, fromCol: number, toRow: number, toCol: number) => void;
 }
 
+// Convert column index to letter (0 -> A, 1 -> B, etc.)
+function colToLetter(col: number): string {
+  return String.fromCharCode(65 + col); // 65 is 'A' in ASCII
+}
+
 export function BedGrid({ bed, onCellClick, onMovePlant }: BedGridProps) {
   const { widthFt, lengthFt, cells } = bed;
   const [draggedCell, setDraggedCell] = useState<{ row: number; col: number } | null>(null);
@@ -140,24 +145,57 @@ export function BedGrid({ bed, onCellClick, onMovePlant }: BedGridProps) {
   };
 
   return (
-    <div className="overflow-auto p-4">
-      <div
-        className="inline-grid gap-0"
-        style={{
-          gridTemplateColumns: `repeat(${widthFt}, 48px)`,
-          gridTemplateRows: `repeat(${lengthFt}, 48px)`,
-        }}
-      >
-        {Array.from({ length: lengthFt }, (_, row) =>
-          Array.from({ length: widthFt }, (_, col) => {
-            const key = `${row}_${col}`;
-            // Skip rendering overflow cells
-            if (overflowCells.has(key)) {
-              return null;
-            }
-            return renderCell(row, col);
-          })
-        )}
+    <div className="overflow-auto">
+      <div className="inline-flex flex-col">
+        {/* Column headers (A, B, C...) */}
+        <div className="flex">
+          {/* Empty corner cell */}
+          <div className="w-8 h-8" />
+          {/* Column letters */}
+          {Array.from({ length: widthFt }, (_, col) => (
+            <div
+              key={`col-${col}`}
+              className="w-12 h-8 flex items-center justify-center text-xs font-medium text-sage-600"
+            >
+              {colToLetter(col)}
+            </div>
+          ))}
+        </div>
+
+        {/* Grid with row numbers */}
+        <div className="flex">
+          {/* Row numbers */}
+          <div className="flex flex-col">
+            {Array.from({ length: lengthFt }, (_, row) => (
+              <div
+                key={`row-${row}`}
+                className="w-8 h-12 flex items-center justify-center text-xs font-medium text-sage-600"
+              >
+                {row + 1}
+              </div>
+            ))}
+          </div>
+
+          {/* The actual grid */}
+          <div
+            className="inline-grid gap-0"
+            style={{
+              gridTemplateColumns: `repeat(${widthFt}, 48px)`,
+              gridTemplateRows: `repeat(${lengthFt}, 48px)`,
+            }}
+          >
+            {Array.from({ length: lengthFt }, (_, row) =>
+              Array.from({ length: widthFt }, (_, col) => {
+                const key = `${row}_${col}`;
+                // Skip rendering overflow cells
+                if (overflowCells.has(key)) {
+                  return null;
+                }
+                return renderCell(row, col);
+              })
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

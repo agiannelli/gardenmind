@@ -130,6 +130,22 @@ export function parseCellKey(key: string): { row: number; col: number } {
 }
 
 /**
+ * Convert row and column indices to Excel-style coordinate (e.g., "A1", "C5").
+ */
+export function toExcelCoord(row: number, col: number): string {
+  const letter = String.fromCharCode(65 + col); // 65 is 'A' in ASCII
+  return `${letter}${row + 1}`;
+}
+
+/**
+ * Convert a cell key to Excel-style coordinate.
+ */
+export function cellKeyToExcel(key: string): string {
+  const { row, col } = parseCellKey(key);
+  return toExcelCoord(row, col);
+}
+
+/**
  * Analyze dimension changes and determine which plants will be affected.
  * Returns information about plants that will be lost and those that can be kept.
  */

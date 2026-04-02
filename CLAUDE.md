@@ -24,8 +24,9 @@ AI-powered garden planning app. Next.js 15, TypeScript, Tailwind, Auth0, Anthrop
 
 ## PR status
 - PR #1 base scaffold ✅ merged
-- PR #2 Auth0 login/session 🔄 up next
-- PR #3 Planner — bed creation + grid
+- PR #2 Auth0 login/session ✅ merged
+- PR #3 Planner — bed creation + grid ✅ merged
 - PR #4 Journal — entries, filters, tags
 - PR #5 AI Advisor — Claude plant lookup + recommendations
 - PR #6 Calendar — seasonal planting view
+- PR #7 Plant care tracking — watering, fertilizing, pruning schedules

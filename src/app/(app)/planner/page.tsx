@@ -8,9 +8,10 @@ import { CreateBedModal } from "@/components/planner/CreateBedModal";
 import { BedGrid } from "@/components/planner/BedGrid";
 import { PlantSelector } from "@/components/planner/PlantSelector";
 import { BedToolbar } from "@/components/planner/BedToolbar";
+import { PlantList } from "@/components/planner/PlantList";
 import { Modal, Button } from "@/components/ui";
 import { PLANT_MAP } from "@/lib/plants";
-import { analyzeDimensionChange } from "@/lib/bedUtils";
+import { analyzeDimensionChange, toExcelCoord } from "@/lib/bedUtils";
 import type { Bed, CellData } from "@/types";
 
 function PlannerPageContent() {
@@ -298,12 +299,29 @@ function PlannerPageContent() {
             }}
             onDelete={() => setDeleteModalOpen(true)}
           />
-          <div className="flex-1 overflow-auto">
-            <BedGrid
-              bed={activeBed}
-              onCellClick={handleCellClick}
-              onMovePlant={handleMovePlant}
-            />
+          <div className="flex-1 overflow-auto flex gap-6 p-4">
+            {/* Grid on the left */}
+            <div className="flex-shrink-0">
+              <BedGrid
+                bed={activeBed}
+                onCellClick={handleCellClick}
+                onMovePlant={handleMovePlant}
+              />
+            </div>
+            {/* Plant list on the right */}
+            <div className="flex-shrink-0 w-80">
+              <PlantList
+                bed={activeBed}
+                onPlantClick={(row, col) => {
+                  setSelectedPlantCell({ row, col });
+                  setPlantInfoModalOpen(true);
+                }}
+                onRemovePlant={(row, col) => {
+                  setSelectedPlantCell({ row, col });
+                  setPlantInfoModalOpen(true);
+                }}
+              />
+            </div>
           </div>
         </>
       )}
@@ -450,9 +468,10 @@ function PlannerPageContent() {
                 <ul className="space-y-1">
                   {dimensionWarning.analysis.affectedPlants.map((plant) => {
                     const plantInfo = PLANT_MAP[plant.plantId];
+                    const coord = toExcelCoord(plant.row, plant.col);
                     return (
                       <li key={plant.key} className="text-sage-600 text-sm">
-                        {plantInfo?.emoji} {plantInfo?.name} at position ({plant.row}, {plant.col})
+                        {plantInfo?.emoji} {plantInfo?.name} at {coord}
                       </li>
                     );
                   })}
