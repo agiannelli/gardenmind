@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useBeds } from "@/hooks/useBeds";
 import { EmptyState } from "@/components/planner/EmptyState";
 import { CreateBedModal } from "@/components/planner/CreateBedModal";
@@ -16,6 +16,7 @@ import type { Bed, CellData } from "@/types";
 
 function PlannerPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const {
     beds,
     loading,
@@ -27,7 +28,7 @@ function PlannerPageContent() {
     removeFromCell,
   } = useBeds();
 
-  const [activeBedId, setActiveBedId] = useState<string | null>(null);
+  const bedIdFromUrl = searchParams.get("bed");
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editingBed, setEditingBed] = useState<Bed | null>(null);
   const [plantModalOpen, setPlantModalOpen] = useState(false);
@@ -57,19 +58,9 @@ function PlannerPageContent() {
     };
   } | null>(null);
 
-  const activeBed = beds.find((bed) => bed.id === activeBedId) || null;
-
-  // Set active bed from URL query param or auto-select first bed
-  useEffect(() => {
-    if (beds.length === 0) return;
-
-    const bedIdFromUrl = searchParams.get("bed");
-    if (bedIdFromUrl && beds.find((bed) => bed.id === bedIdFromUrl)) {
-      setActiveBedId(bedIdFromUrl);
-    } else if (!activeBedId) {
-      setActiveBedId(beds[0].id);
-    }
-  }, [beds, searchParams, activeBedId]);
+  const activeBed = bedIdFromUrl
+    ? beds.find((bed) => bed.id === bedIdFromUrl) || null
+    : null;
 
   const handleCreateBed = async (bedData: {
     name: string;
@@ -82,7 +73,7 @@ function PlannerPageContent() {
     try {
       const newBed = await createBed(bedData);
       setCreateModalOpen(false);
-      setActiveBedId(newBed.id);
+      router.push(`/planner?bed=${newBed.id}`);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to create bed");
     }
@@ -152,7 +143,7 @@ function PlannerPageContent() {
     try {
       await deleteBed(activeBed.id);
       setDeleteModalOpen(false);
-      setActiveBedId(null);
+      router.push("/planner");
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to delete bed");
     }
@@ -272,16 +263,110 @@ function PlannerPageContent() {
     );
   }
 
-  if (beds.length === 0) {
+  // ─── BED LIST VIEW ───────────────────────────────────────────────────
+  // Show bed list when no ?bed= query param is present
+  if (!bedIdFromUrl) {
+    if (beds.length === 0) {
+      return (
+        <>
+          <EmptyState onCreateClick={() => setCreateModalOpen(true)} />
+          <CreateBedModal
+            open={createModalOpen}
+            onClose={() => setCreateModalOpen(false)}
+            onSave={handleCreateBed}
+          />
+        </>
+      );
+    }
+
     return (
-      <>
-        <EmptyState onCreateClick={() => setCreateModalOpen(true)} />
-        <CreateBedModal
-          open={createModalOpen}
-          onClose={() => setCreateModalOpen(false)}
-          onSave={handleCreateBed}
-        />
-      </>
+      <div className="h-full overflow-auto">
+        <div className="max-w-6xl mx-auto p-6">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-4xl font-serif text-sage-700 mb-2">
+                Garden Planner
+              </h1>
+              <p className="text-sage-600">
+                Select a bed to view and edit, or create a new one.
+              </p>
+            </div>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => setCreateModalOpen(true)}
+            >
+              + Create New Bed
+            </Button>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {beds.map((bed) => {
+              const plantCount = Object.values(bed.cells).filter(
+                (c) => c.isAnchor
+              ).length;
+
+              return (
+                <div
+                  key={bed.id}
+                  onClick={() => router.push(`/planner?bed=${bed.id}`)}
+                  className="cursor-pointer"
+                >
+                  <div className="bg-white border border-sage-200 rounded-lg p-4 hover:border-sage-400 hover:shadow-md transition-all">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div
+                        className="w-4 h-4 rounded-full flex-shrink-0 mt-1"
+                        style={{ backgroundColor: bed.color }}
+                      />
+                      <div className="flex-1">
+                        <h3 className="font-serif text-lg text-sage-700">
+                          {bed.name}
+                        </h3>
+                        <p className="text-sm text-sage-600">
+                          {bed.widthFt}×{bed.lengthFt} ft · {bed.gardenType}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-sm text-sage-600">
+                      <div>
+                        <span className="font-medium">{plantCount}</span> plant
+                        {plantCount !== 1 ? "s" : ""}
+                      </div>
+                      <div className="capitalize">
+                        {bed.sunExposure.replace("-", " ")}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <CreateBedModal
+            open={createModalOpen}
+            onClose={() => setCreateModalOpen(false)}
+            onSave={handleCreateBed}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // ─── BED EDITOR VIEW ─────────────────────────────────────────────────
+  // Show bed editor when ?bed=ID is present
+
+  // Check if bed exists
+  if (!activeBed) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <p className="text-sage-600 mb-4">Bed not found</p>
+          <Button onClick={() => router.push("/planner")} variant="outline">
+            Back to Bed List
+          </Button>
+        </div>
+      </div>
     );
   }
 
@@ -291,6 +376,17 @@ function PlannerPageContent() {
     <div className="h-full flex flex-col">
       {activeBed && (
         <>
+          {/* Back button */}
+          <div className="px-4 pt-3 pb-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push("/planner")}
+            >
+              ← Back to Beds
+            </Button>
+          </div>
+
           <BedToolbar
             bed={activeBed}
             onEdit={() => {

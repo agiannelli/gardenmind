@@ -6,7 +6,7 @@ import { Suspense } from "react";
 
 function LoginForm() {
   const searchParams = useSearchParams();
-  const returnTo = searchParams.get("returnTo") || "/planner";
+  const returnTo = searchParams.get("returnTo") || "/dashboard";
 
   const handleLogin = () => {
     window.location.href = `/api/auth/login?returnTo=${encodeURIComponent(returnTo)}`;
