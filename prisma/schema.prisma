@@ -10,17 +10,38 @@ datasource db {
 }
 
 model Garden {
-  id          String         @id @default(cuid())
-  userId      String         // Auth0 user sub (owner)
-  name        String
-  description String?
-  color       String         @default("#84A98C")
-  beds        Bed[]
-  members     GardenMember[]
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id             String         @id @default(cuid())
+  userId         String         // Auth0 user sub (owner)
+  name           String
+  description    String?
+  color          String         @default("#84A98C")
+  beds           Bed[]
+  members        GardenMember[]
+  journalEntries JournalEntry[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
   @@index([userId])
+}
+
+model JournalEntry {
+  id        String   @id @default(cuid())
+  userId    String   // Auth0 user sub
+  gardenId  String
+  garden    Garden   @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+  bedId     String?  // Optional — links to a specific bed
+  type      String   // "observation" | "pest" | "harvest" | "watering"
+  title     String
+  notes     String   @default("")
+  tags      Json     @default("[]")   // string[]
+  photos    Json     @default("[]")   // string[] — Vercel Blob URLs
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([gardenId])
+  @@index([bedId])
 }
 
 model GardenMember {

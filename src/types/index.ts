@@ -72,26 +72,21 @@ export interface Plant {
 
 // ─── Journal ──────────────────────────────────────────────────────────────────
 
-export type EntryType =
-  | "observation"
-  | "growth"
-  | "pest"
-  | "harvest"
-  | "watering"
-  | "fertilizing"
-  | "note"
-  | "weather";
+export type EntryType = "observation" | "pest" | "harvest" | "watering";
 
 export interface JournalEntry {
   id: string;
+  userId: string;
+  gardenId: string;
+  bedId: string | null;
   type: EntryType;
   title: string;
-  bedId: string;
-  date: string;        // ISO date string YYYY-MM-DD
-  plantIds: string[];
   notes: string;
   tags: string[];
+  photos: string[];    // Vercel Blob URLs
+  date: string;        // ISO datetime string
   createdAt: string;
+  updatedAt: string;
 }
 
 // ─── User / Auth ──────────────────────────────────────────────────────────────
