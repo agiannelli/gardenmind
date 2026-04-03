@@ -59,10 +59,12 @@
 
 ### Verify Deployment
 
-1. Visit `https://your-app.vercel.app`
-2. Click "Login" to test Auth0
-3. Navigate to Planner and create a bed
-4. If you see "Error fetching beds", the migrations weren't run (see step 5 above)
+1. Visit `https://your-app.vercel.app` — should show public landing page
+2. Click "Get Started" or "Sign In" to test Auth0
+3. After login, you should land on the dashboard
+4. Click "Create New Bed" to test database connection
+5. If you see "Error fetching beds", the migrations weren't run (see step 5 above)
+6. Navigate to Planner to test the bed editor and plant placement
 
 ## Database Migrations
 
@@ -120,10 +122,12 @@ npx prisma migrate reset
 ## Post-Deployment
 
 1. **Test all features**
-   - Login/logout
-   - Create/edit/delete beds
-   - Plant placement
-   - Drag-and-drop
+   - Public home page loads
+   - Login/logout flow
+   - Dashboard shows garden overview
+   - Create/edit/delete beds in Planner
+   - Plant placement and drag-and-drop
+   - Library search and filters
 
 2. **Monitor**
    - Check Vercel Logs for errors

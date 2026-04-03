@@ -52,30 +52,45 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## User flow
+
+- **Public home page** (`/`) — Landing page with features overview
+- **Login** → Redirects to dashboard after authentication
+- **Dashboard** (`/dashboard`) — Overview with garden stats and bed cards
+- **Planner** (`/planner`) — Bed list view; click a bed to edit (`/planner?bed=ID`)
+- All authenticated routes protected by Auth0 middleware
+
 ## Project structure
 
 ```
 src/
 ├── app/
+│   ├── page.tsx           # Public landing page
 │   ├── (app)/             # Authenticated app shell
-│   │   ├── planner/       # Garden grid plotter
+│   │   ├── dashboard/     # Garden overview & stats
+│   │   ├── planner/       # Bed list + grid editor
+│   │   ├── library/       # Plant catalog browser
 │   │   ├── journal/       # Observation log
-│   │   ├── calendar/      # Seasonal calendar
-│   │   └── ai-advisor/    # AI chat interface
+│   │   ├── calendar/      # Seasonal calendar (planned)
+│   │   └── ai-advisor/    # AI chat interface (planned)
 │   ├── (auth)/            # Login / signup pages
 │   └── api/
 │       ├── auth/          # Auth0 handler
-│       └── ai/            # Claude API proxy
+│       ├── beds/          # Bed CRUD API
+│       └── ai/            # Claude API proxy (planned)
 ├── components/
 │   ├── layout/            # Nav, Sidebar
-│   ├── ui/                # Button, Input, Modal, Badge
+│   ├── ui/                # Button, Input, Modal, Card, Badge
 │   ├── planner/           # Garden grid components
-│   └── journal/           # Journal entry components
+│   └── library/           # Plant catalog components
 ├── lib/
 │   ├── utils.ts           # cn() helper
-│   └── plants.ts          # Static plant library
-├── styles/
-│   └── globals.css
+│   ├── plants.ts          # Static plant library
+│   └── bedUtils.ts        # Grid calculations
+├── hooks/
+│   └── useBeds.ts         # Bed data management
+├── prisma/
+│   └── schema.prisma      # Database schema
 └── types/
     └── index.ts           # Shared TypeScript types
 ```
@@ -91,10 +106,10 @@ src/
 | #5 | AI Advisor — Claude-powered plant lookup + recommendations |
 | #6 | Calendar — seasonal planting view |
 
-## Deployment (Vercel)
+## Deployment
 
-1. Push to GitHub
-2. Import repo in [Vercel dashboard](https://vercel.com)
-3. Add all env vars from `.env.example` in Vercel project settings
-4. Update `AUTH0_BASE_URL` to your Vercel URL
-5. Add the Vercel URL to Auth0 callback/logout/origins settings
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete Vercel deployment instructions including:
+- Database setup (Vercel Postgres)
+- Environment variables configuration
+- Auth0 callback URL setup
+- Running database migrations

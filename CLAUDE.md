@@ -3,6 +3,14 @@
 ## What this is
 AI-powered garden planning app. Next.js 15, TypeScript, Tailwind, Auth0, Anthropic API, Vercel.
 
+## App Structure
+- **Public home** (`/`) — Landing page with features showcase
+- **Dashboard** (`/dashboard`) — Authenticated landing, shows garden overview & bed cards
+- **Planner** (`/planner`) — Bed list view; `/planner?bed=ID` opens bed editor
+- **Library** (`/library`) — Plant catalog with search/filters
+- **Journal, Calendar, AI Advisor** — Coming soon pages
+- Protected routes: dashboard, planner, library, journal, calendar, ai-advisor
+
 ## Design system
 - Fonts: Lora (headings, serif), DM Sans (body)
 - Colors: sage (primary), earth (accent), cream (background) — all defined in tailwind.config.ts
@@ -31,11 +39,14 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete deployment guide.
 - Commits: feat:, fix:, chore: prefixes
 - Always run `npm run lint && npm run type-check` before marking a PR ready
 
-## PR status
-- PR #1 base scaffold ✅ merged
-- PR #2 Auth0 login/session ✅ merged
-- PR #3 Planner — bed creation + grid ✅ merged
-- PR #4 Journal — entries, filters, tags
-- PR #5 AI Advisor — Claude plant lookup + recommendations
-- PR #6 Calendar — seasonal planting view
-- PR #7 Plant care tracking — watering, fertilizing, pruning schedules
+## Feature Status
+- ✅ Base scaffold — routing, layout, design system
+- ✅ Auth0 login/session — middleware protects (app) routes
+- ✅ Public home page — landing page with features
+- ✅ Dashboard — garden overview with stats & bed cards
+- ✅ Planner — bed creation, grid editor, plant placement, drag-drop
+- ✅ Library — plant catalog with search, filters, companion planting
+- 🚧 Journal — entries, filters, tags (coming soon)
+- 🚧 AI Advisor — Claude plant lookup + recommendations (coming soon)
+- 🚧 Calendar — seasonal planting view (coming soon)
+- 🚧 Care tracking — watering, fertilizing, pruning schedules (coming soon)
