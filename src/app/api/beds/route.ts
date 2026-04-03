@@ -1,6 +1,7 @@
 import { getSession } from "@auth0/nextjs-auth0";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { canWriteGarden } from "@/lib/gardenAuth";
 import type { SunExposure, GardenType } from "@/types";
 
 // NOTE: @auth0/nextjs-auth0@3.5.0 causes Next.js 15 cookies warnings
@@ -20,9 +21,22 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const userId = session.user.sub as string;
+
+    // Find gardens the user is a member of (accepted)
+    const memberGardenIds = (
+      await prisma.gardenMember.findMany({
+        where: { userId, status: "accepted" },
+        select: { gardenId: true },
+      })
+    ).map((m) => m.gardenId);
+
     const beds = await prisma.bed.findMany({
       where: {
-        userId: session.user.sub,
+        OR: [
+          { userId },
+          { gardenId: { in: memberGardenIds } },
+        ],
       },
       orderBy: {
         createdAt: "desc",
@@ -52,7 +66,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, widthFt, lengthFt, sunExposure, gardenType, color } = body;
+    const { name, widthFt, lengthFt, sunExposure, gardenType, color, gardenId } = body;
 
     // Validation
     if (!name || typeof name !== "string" || name.length < 1 || name.length > 50) {
@@ -92,9 +106,21 @@ export async function POST(request: Request) {
       );
     }
 
+    // If a gardenId is provided, verify the user can write to it
+    if (gardenId) {
+      const canWrite = await canWriteGarden(gardenId, session.user.sub as string);
+      if (!canWrite) {
+        return NextResponse.json(
+          { error: "You do not have access to this garden" },
+          { status: 403 }
+        );
+      }
+    }
+
     const bed = await prisma.bed.create({
       data: {
-        userId: session.user.sub,
+        userId: session.user.sub as string,
+        gardenId: gardenId || null,
         name,
         widthFt: parseInt(widthFt, 10),
         lengthFt: parseInt(lengthFt, 10),

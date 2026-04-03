@@ -7,6 +7,7 @@ interface CreateBedInput {
   lengthFt: number;
   sunExposure: string;
   color: string;
+  gardenId?: string;
 }
 
 interface UpdateBedInput {
@@ -15,6 +16,7 @@ interface UpdateBedInput {
   lengthFt?: number;
   sunExposure?: string;
   color?: string;
+  gardenId?: string;
 }
 
 export function useBeds() {

@@ -75,7 +75,7 @@ export async function PUT(request: Request, context: RouteContext) {
     }
 
     const body = await request.json();
-    const { name, widthFt, lengthFt, sunExposure, gardenType, color } = body;
+    const { name, widthFt, lengthFt, sunExposure, gardenType, color, gardenId } = body;
 
     // Validation
     const updateData: {
@@ -85,6 +85,7 @@ export async function PUT(request: Request, context: RouteContext) {
       sunExposure?: string;
       gardenType?: string;
       color?: string;
+      gardenId?: string | null;
       cells?: Record<string, CellData>;
     } = {};
 
@@ -164,6 +165,11 @@ export async function PUT(request: Request, context: RouteContext) {
         );
       }
       updateData.color = color;
+    }
+
+    if (gardenId !== undefined) {
+      // null clears the assignment; a string value assigns to a garden
+      updateData.gardenId = gardenId === "" ? null : gardenId || null;
     }
 
     const updatedBed = await prisma.bed.update({

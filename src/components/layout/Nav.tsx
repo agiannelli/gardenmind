@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 
 const NAV_LINKS = [
+  { href: "/dashboard",  label: "Dashboard" },
   { href: "/planner",    label: "Planner" },
   { href: "/journal",    label: "Journal" },
   { href: "/calendar",   label: "Calendar" },
@@ -44,7 +45,7 @@ export function Nav() {
     <nav className="h-14 bg-sage-700 flex items-center gap-0 px-6 shrink-0 border-b border-white/10">
       {/* Brand */}
       <Link
-        href="/planner"
+        href="/dashboard"
         className="font-serif text-xl text-white tracking-tight flex items-center gap-2 mr-8 hover:opacity-90 transition-opacity"
       >
         🌿 GardenMind

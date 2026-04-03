@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Modal, Button, Input } from "@/components/ui";
 import { BED_COLORS } from "@/lib/colors";
-import type { Bed, SunExposure, GardenType } from "@/types";
+import type { Bed, Garden, SunExposure, GardenType } from "@/types";
 
 interface CreateBedModalProps {
   open: boolean;
@@ -13,8 +13,11 @@ interface CreateBedModalProps {
     sunExposure: SunExposure;
     gardenType: GardenType;
     color: string;
+    gardenId?: string;
   }) => void;
   bed?: Bed;
+  gardens?: Garden[];
+  defaultGardenId?: string;
 }
 
 export function CreateBedModal({
@@ -22,6 +25,8 @@ export function CreateBedModal({
   onClose,
   onSave,
   bed,
+  gardens = [],
+  defaultGardenId,
 }: CreateBedModalProps) {
   const [name, setName] = useState("");
   const [widthFt, setWidthFt] = useState(4);
@@ -29,6 +34,7 @@ export function CreateBedModal({
   const [sunExposure, setSunExposure] = useState<SunExposure>("full-sun");
   const [gardenType, setGardenType] = useState<GardenType>("square-foot");
   const [color, setColor] = useState<string>(BED_COLORS[0].hex);
+  const [gardenId, setGardenId] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Initialize form with bed data when editing
@@ -40,6 +46,7 @@ export function CreateBedModal({
       setSunExposure(bed.sunExposure);
       setGardenType(bed.gardenType);
       setColor(bed.color);
+      setGardenId(bed.gardenId || "");
     } else {
       // Reset form when creating new bed
       setName("");
@@ -48,9 +55,10 @@ export function CreateBedModal({
       setSunExposure("full-sun");
       setGardenType("square-foot");
       setColor(BED_COLORS[0].hex);
+      setGardenId(defaultGardenId || "");
     }
     setErrors({});
-  }, [bed, open]);
+  }, [bed, open, defaultGardenId]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -83,6 +91,7 @@ export function CreateBedModal({
       sunExposure,
       gardenType,
       color,
+      gardenId: gardenId || undefined,
     });
   };
 
@@ -119,6 +128,32 @@ export function CreateBedModal({
               <p className="text-red-500 text-sm mt-1">{errors.name}</p>
             )}
           </div>
+
+          {/* Garden assignment */}
+          {gardens.length > 0 && (
+            <div>
+              <label
+                htmlFor="gardenId"
+                className="block text-sm font-medium text-sage-700 mb-1"
+              >
+                Garden{" "}
+                <span className="text-sage-400 font-normal">(optional)</span>
+              </label>
+              <select
+                id="gardenId"
+                value={gardenId}
+                onChange={(e) => setGardenId(e.target.value)}
+                className="w-full px-3 py-2 border border-sage-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sage-400 text-sm"
+              >
+                <option value="">No garden (ungrouped)</option>
+                {gardens.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Dimensions */}
           <div className="grid grid-cols-2 gap-4">

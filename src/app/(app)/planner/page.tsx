@@ -3,6 +3,7 @@
 import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useBeds } from "@/hooks/useBeds";
+import { useGardens } from "@/hooks/useGardens";
 import { EmptyState } from "@/components/planner/EmptyState";
 import { CreateBedModal } from "@/components/planner/CreateBedModal";
 import { BedGrid } from "@/components/planner/BedGrid";
@@ -28,6 +29,7 @@ function PlannerPageContent() {
     removeFromCell,
   } = useBeds();
 
+  const { gardens } = useGardens();
   const bedIdFromUrl = searchParams.get("bed");
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editingBed, setEditingBed] = useState<Bed | null>(null);
@@ -50,6 +52,7 @@ function PlannerPageContent() {
       sunExposure: string;
       gardenType: string;
       color: string;
+      gardenId?: string;
     };
     analysis: {
       affectedPlants: Array<{ key: string; plantId: string; row: number; col: number }>;
@@ -69,6 +72,7 @@ function PlannerPageContent() {
     sunExposure: string;
     gardenType: string;
     color: string;
+    gardenId?: string;
   }) => {
     try {
       const newBed = await createBed(bedData);
@@ -86,6 +90,7 @@ function PlannerPageContent() {
     sunExposure: string;
     gardenType: string;
     color: string;
+    gardenId?: string;
   }) => {
     if (!editingBed) return;
 
@@ -266,7 +271,7 @@ function PlannerPageContent() {
   // ─── BED LIST VIEW ───────────────────────────────────────────────────
   // Show bed list when no ?bed= query param is present
   if (!bedIdFromUrl) {
-    if (beds.length === 0) {
+    if (gardens.length === 0 && beds.length === 0) {
       return (
         <>
           <EmptyState onCreateClick={() => setCreateModalOpen(true)} />
@@ -274,10 +279,13 @@ function PlannerPageContent() {
             open={createModalOpen}
             onClose={() => setCreateModalOpen(false)}
             onSave={handleCreateBed}
+            gardens={gardens}
           />
         </>
       );
     }
+
+    const ungroupedBeds = beds.filter((b) => !b.gardenId);
 
     return (
       <div className="h-full overflow-auto">
@@ -288,7 +296,7 @@ function PlannerPageContent() {
                 Garden Planner
               </h1>
               <p className="text-sage-600">
-                Select a bed to view and edit, or create a new one.
+                {gardens.length} garden{gardens.length !== 1 ? "s" : ""} · {beds.length} bed{beds.length !== 1 ? "s" : ""}
               </p>
             </div>
             <Button
@@ -296,57 +304,146 @@ function PlannerPageContent() {
               size="md"
               onClick={() => setCreateModalOpen(true)}
             >
-              + Create New Bed
+              + New Bed
             </Button>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {beds.map((bed) => {
-              const plantCount = Object.values(bed.cells).filter(
-                (c) => c.isAnchor
-              ).length;
-
-              return (
-                <div
-                  key={bed.id}
-                  onClick={() => router.push(`/planner?bed=${bed.id}`)}
-                  className="cursor-pointer"
-                >
-                  <div className="bg-white border border-sage-200 rounded-lg p-4 hover:border-sage-400 hover:shadow-md transition-all">
-                    <div className="flex items-start gap-3 mb-3">
-                      <div
-                        className="w-4 h-4 rounded-full flex-shrink-0 mt-1"
-                        style={{ backgroundColor: bed.color }}
-                      />
-                      <div className="flex-1">
-                        <h3 className="font-serif text-lg text-sage-700">
-                          {bed.name}
-                        </h3>
-                        <p className="text-sm text-sage-600">
-                          {bed.widthFt}×{bed.lengthFt} ft · {bed.gardenType}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-sm text-sage-600">
-                      <div>
-                        <span className="font-medium">{plantCount}</span> plant
-                        {plantCount !== 1 ? "s" : ""}
-                      </div>
-                      <div className="capitalize">
-                        {bed.sunExposure.replace("-", " ")}
-                      </div>
-                    </div>
-                  </div>
+          {/* Gardens with their beds */}
+          {gardens.map((garden) => {
+            const gardenBeds = beds.filter((b) => b.gardenId === garden.id);
+            return (
+              <div key={garden.id} className="mb-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <div
+                    className="w-3 h-3 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: garden.color }}
+                  />
+                  <button
+                    onClick={() => router.push(`/gardens/${garden.id}`)}
+                    className="text-xl font-serif text-sage-700 hover:text-sage-900 transition-colors"
+                  >
+                    {garden.name}
+                  </button>
+                  <span className="text-sm text-sage-400">
+                    {gardenBeds.length} bed{gardenBeds.length !== 1 ? "s" : ""}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
+
+                {gardenBeds.length === 0 ? (
+                  <p className="text-sm text-sage-400 ml-6">
+                    No beds yet.{" "}
+                    <button
+                      onClick={() => {
+                        setCreateModalOpen(true);
+                      }}
+                      className="underline hover:text-sage-600"
+                    >
+                      Add one
+                    </button>
+                  </p>
+                ) : (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 ml-0">
+                    {gardenBeds.map((bed) => {
+                      const plantCount = Object.values(bed.cells).filter(
+                        (c) => c.isAnchor
+                      ).length;
+                      return (
+                        <div
+                          key={bed.id}
+                          onClick={() => router.push(`/planner?bed=${bed.id}`)}
+                          className="cursor-pointer"
+                        >
+                          <div className="bg-white border border-sage-200 rounded-lg p-4 hover:border-sage-400 hover:shadow-md transition-all">
+                            <div className="flex items-start gap-3 mb-3">
+                              <div
+                                className="w-4 h-4 rounded-full flex-shrink-0 mt-1"
+                                style={{ backgroundColor: bed.color }}
+                              />
+                              <div className="flex-1">
+                                <h3 className="font-serif text-lg text-sage-700">
+                                  {bed.name}
+                                </h3>
+                                <p className="text-sm text-sage-600">
+                                  {bed.widthFt}×{bed.lengthFt} ft · {bed.gardenType}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between text-sm text-sage-600">
+                              <div>
+                                <span className="font-medium">{plantCount}</span>{" "}
+                                plant{plantCount !== 1 ? "s" : ""}
+                              </div>
+                              <div className="capitalize">
+                                {bed.sunExposure.replace("-", " ")}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Ungrouped beds */}
+          {ungroupedBeds.length > 0 && (
+            <div className="mb-8">
+              <div className="flex items-center gap-3 mb-4">
+                <p className="text-xl font-serif text-sage-500">Ungrouped Beds</p>
+                <span className="text-sm text-sage-400">
+                  {ungroupedBeds.length} bed{ungroupedBeds.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {ungroupedBeds.map((bed) => {
+                  const plantCount = Object.values(bed.cells).filter(
+                    (c) => c.isAnchor
+                  ).length;
+                  return (
+                    <div
+                      key={bed.id}
+                      onClick={() => router.push(`/planner?bed=${bed.id}`)}
+                      className="cursor-pointer"
+                    >
+                      <div className="bg-white border border-sage-200 rounded-lg p-4 hover:border-sage-400 hover:shadow-md transition-all">
+                        <div className="flex items-start gap-3 mb-3">
+                          <div
+                            className="w-4 h-4 rounded-full flex-shrink-0 mt-1"
+                            style={{ backgroundColor: bed.color }}
+                          />
+                          <div className="flex-1">
+                            <h3 className="font-serif text-lg text-sage-700">
+                              {bed.name}
+                            </h3>
+                            <p className="text-sm text-sage-600">
+                              {bed.widthFt}×{bed.lengthFt} ft · {bed.gardenType}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between text-sm text-sage-600">
+                          <div>
+                            <span className="font-medium">{plantCount}</span>{" "}
+                            plant{plantCount !== 1 ? "s" : ""}
+                          </div>
+                          <div className="capitalize">
+                            {bed.sunExposure.replace("-", " ")}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <CreateBedModal
             open={createModalOpen}
             onClose={() => setCreateModalOpen(false)}
             onSave={handleCreateBed}
+            gardens={gardens}
           />
         </div>
       </div>
@@ -431,6 +528,7 @@ function PlannerPageContent() {
         }}
         onSave={editingBed ? handleEditBed : handleCreateBed}
         bed={editingBed || undefined}
+        gardens={gardens}
       />
 
       {/* Plant Selector Modal */}

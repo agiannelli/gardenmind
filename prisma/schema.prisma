@@ -9,9 +9,40 @@ datasource db {
   provider = "postgresql"
 }
 
+model Garden {
+  id          String         @id @default(cuid())
+  userId      String         // Auth0 user sub (owner)
+  name        String
+  description String?
+  color       String         @default("#84A98C")
+  beds        Bed[]
+  members     GardenMember[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([userId])
+}
+
+model GardenMember {
+  id          String   @id @default(cuid())
+  gardenId    String
+  garden      Garden   @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+  email       String
+  userId      String?  // Auth0 sub, populated when invite is accepted
+  role        String   @default("editor") // "editor" | "viewer"
+  inviteToken String?  @unique
+  status      String   @default("pending") // "pending" | "accepted"
+  createdAt   DateTime @default(now())
+
+  @@index([gardenId])
+  @@index([userId])
+}
+
 model Bed {
   id          String   @id @default(cuid())
-  userId      String   // Auth0 user sub
+  userId      String   // Auth0 user sub (creator)
+  gardenId    String?
+  garden      Garden?  @relation(fields: [gardenId], references: [id], onDelete: SetNull)
   name        String
   widthFt     Int      // Width in feet
   lengthFt    Int      // Length in feet
@@ -23,4 +54,5 @@ model Bed {
   updatedAt   DateTime @updatedAt
 
   @@index([userId])
+  @@index([gardenId])
 }
