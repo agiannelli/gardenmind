@@ -13,7 +13,7 @@ import { PlantList } from "@/components/planner/PlantList";
 import { Modal, Button } from "@/components/ui";
 import { PLANT_MAP } from "@/lib/plants";
 import { analyzeDimensionChange, toExcelCoord } from "@/lib/bedUtils";
-import type { Bed, CellData } from "@/types";
+import type { Bed, BedFacing, CellData } from "@/types";
 
 function PlannerPageContent() {
   const searchParams = useSearchParams();
@@ -71,6 +71,7 @@ function PlannerPageContent() {
     lengthFt: number;
     sunExposure: string;
     gardenType: string;
+    facing: BedFacing;
     color: string;
     gardenId?: string;
   }) => {
@@ -89,6 +90,7 @@ function PlannerPageContent() {
     lengthFt: number;
     sunExposure: string;
     gardenType: string;
+    facing: BedFacing;
     color: string;
     gardenId?: string;
   }) => {

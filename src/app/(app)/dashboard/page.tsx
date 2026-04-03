@@ -11,7 +11,7 @@ import { GardenMembersModal } from "@/components/gardens/GardenMembersModal";
 import { AssignBedModal } from "@/components/gardens/AssignBedModal";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Garden } from "@/types";
+import type { BedFacing, Garden } from "@/types";
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -51,6 +51,7 @@ export default function DashboardPage() {
     lengthFt: number;
     sunExposure: string;
     gardenType: string;
+    facing: BedFacing;
     color: string;
   }) => {
     try {

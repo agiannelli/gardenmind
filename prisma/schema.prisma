@@ -69,6 +69,7 @@ model Bed {
   lengthFt    Int      // Length in feet
   sunExposure String   // "full-sun" | "partial-sun" | "full-shade"
   gardenType  String   @default("square-foot")  // "traditional" | "square-foot" | "intensive"
+  facing      String   @default("south")        // "north" | "northeast" | "east" | "southeast" | "south" | "southwest" | "west" | "northwest"
   color       String   // Hex color code
   cells       Json     @default("{}")  // Record<string, CellData>
   createdAt   DateTime @default(now())

@@ -1,7 +1,18 @@
 import { useState, useEffect } from "react";
 import { Modal, Button, Input } from "@/components/ui";
 import { BED_COLORS } from "@/lib/colors";
-import type { Bed, Garden, SunExposure, GardenType } from "@/types";
+import type { Bed, Garden, SunExposure, GardenType, BedFacing } from "@/types";
+
+const COMPASS_DIRECTIONS: { value: BedFacing; label: string; row: number; col: number }[] = [
+  { value: "northwest", label: "NW", row: 0, col: 0 },
+  { value: "north",     label: "N",  row: 0, col: 1 },
+  { value: "northeast", label: "NE", row: 0, col: 2 },
+  { value: "west",      label: "W",  row: 1, col: 0 },
+  { value: "east",      label: "E",  row: 1, col: 2 },
+  { value: "southwest", label: "SW", row: 2, col: 0 },
+  { value: "south",     label: "S",  row: 2, col: 1 },
+  { value: "southeast", label: "SE", row: 2, col: 2 },
+];
 
 interface CreateBedModalProps {
   open: boolean;
@@ -12,6 +23,7 @@ interface CreateBedModalProps {
     lengthFt: number;
     sunExposure: SunExposure;
     gardenType: GardenType;
+    facing: BedFacing;
     color: string;
     gardenId?: string;
   }) => void;
@@ -33,6 +45,7 @@ export function CreateBedModal({
   const [lengthFt, setLengthFt] = useState(8);
   const [sunExposure, setSunExposure] = useState<SunExposure>("full-sun");
   const [gardenType, setGardenType] = useState<GardenType>("square-foot");
+  const [facing, setFacing] = useState<BedFacing>("south");
   const [color, setColor] = useState<string>(BED_COLORS[0].hex);
   const [gardenId, setGardenId] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -45,6 +58,7 @@ export function CreateBedModal({
       setLengthFt(bed.lengthFt);
       setSunExposure(bed.sunExposure);
       setGardenType(bed.gardenType);
+      setFacing(bed.facing);
       setColor(bed.color);
       setGardenId(bed.gardenId || "");
     } else {
@@ -54,6 +68,7 @@ export function CreateBedModal({
       setLengthFt(8);
       setSunExposure("full-sun");
       setGardenType("square-foot");
+      setFacing("south");
       setColor(BED_COLORS[0].hex);
       setGardenId(defaultGardenId || "");
     }
@@ -90,6 +105,7 @@ export function CreateBedModal({
       lengthFt,
       sunExposure,
       gardenType,
+      facing,
       color,
       gardenId: gardenId || undefined,
     });
@@ -218,6 +234,52 @@ export function CreateBedModal({
               <option value="partial-sun">Partial Sun (3-6 hours)</option>
               <option value="full-shade">Full Shade (&lt;3 hours)</option>
             </select>
+          </div>
+
+          {/* Facing Direction */}
+          <div>
+            <label className="block text-sm font-medium text-sage-700 mb-1">
+              Bed Facing Direction
+            </label>
+            <p className="text-xs text-sage-500 mb-2">
+              Which direction does the front of this bed face? Used for sun and planting recommendations.
+            </p>
+            <div className="inline-grid grid-cols-3 gap-1">
+              {Array.from({ length: 3 }, (_, row) =>
+                Array.from({ length: 3 }, (_, col) => {
+                  if (row === 1 && col === 1) {
+                    return (
+                      <div
+                        key="center"
+                        className="w-10 h-10 flex items-center justify-center text-sage-300 text-lg"
+                      >
+                        ✦
+                      </div>
+                    );
+                  }
+                  const dir = COMPASS_DIRECTIONS.find(
+                    (d) => d.row === row && d.col === col
+                  );
+                  if (!dir) return null;
+                  const isSelected = facing === dir.value;
+                  return (
+                    <button
+                      key={dir.value}
+                      type="button"
+                      onClick={() => setFacing(dir.value)}
+                      className={`w-10 h-10 rounded-md text-xs font-semibold transition-all ${
+                        isSelected
+                          ? "bg-sage-600 text-white"
+                          : "bg-sage-50 text-sage-600 hover:bg-sage-100 border border-sage-200"
+                      }`}
+                      title={dir.value.charAt(0).toUpperCase() + dir.value.slice(1)}
+                    >
+                      {dir.label}
+                    </button>
+                  );
+                })
+              )}
+            </div>
           </div>
 
           {/* Garden Type */}

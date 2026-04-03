@@ -32,6 +32,10 @@ export type SunExposure = "full-sun" | "partial-sun" | "full-shade";
 
 export type GardenType = "traditional" | "square-foot" | "intensive";
 
+export type BedFacing =
+  | "north" | "northeast" | "east" | "southeast"
+  | "south" | "southwest" | "west" | "northwest";
+
 export interface CellData {
   plantId: string;
   isAnchor: boolean;
@@ -47,6 +51,7 @@ export interface Bed {
   lengthFt: number;
   sunExposure: SunExposure;
   gardenType: GardenType;
+  facing: BedFacing;
   color: string;
   /** key: "row_col", value: CellData */
   cells: Record<string, CellData>;

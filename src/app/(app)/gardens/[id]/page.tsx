@@ -83,6 +83,7 @@ export default function GardenPage({
     lengthFt: number;
     sunExposure: string;
     gardenType: string;
+    facing: string;
     color: string;
     gardenId?: string;
   }) => {

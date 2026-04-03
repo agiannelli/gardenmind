@@ -2,7 +2,7 @@ import { getSession } from "@auth0/nextjs-auth0";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { canWriteGarden } from "@/lib/gardenAuth";
-import type { SunExposure, GardenType } from "@/types";
+import type { SunExposure, GardenType, BedFacing } from "@/types";
 
 // NOTE: @auth0/nextjs-auth0@3.5.0 causes Next.js 15 cookies warnings
 // This doesn't break functionality, but generates console warnings
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, widthFt, lengthFt, sunExposure, gardenType, color, gardenId } = body;
+    const { name, widthFt, lengthFt, sunExposure, gardenType, facing, color, gardenId } = body;
 
     // Validation
     if (!name || typeof name !== "string" || name.length < 1 || name.length > 50) {
@@ -99,6 +99,11 @@ export async function POST(request: Request) {
       );
     }
 
+    const validFacings: BedFacing[] = ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"];
+    if (facing && !validFacings.includes(facing)) {
+      return NextResponse.json({ error: "Invalid facing direction" }, { status: 400 });
+    }
+
     if (!color || typeof color !== "string" || !/^#[0-9A-Fa-f]{6}$/.test(color)) {
       return NextResponse.json(
         { error: "Invalid color format (must be hex code)" },
@@ -126,6 +131,7 @@ export async function POST(request: Request) {
         lengthFt: parseInt(lengthFt, 10),
         sunExposure,
         gardenType: gardenType || "square-foot",
+        facing: facing || "south",
         color,
         cells: {},
       },

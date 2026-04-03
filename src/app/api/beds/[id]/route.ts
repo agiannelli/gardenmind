@@ -1,7 +1,7 @@
 import { getSession } from "@auth0/nextjs-auth0";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import type { SunExposure, CellData, GardenType } from "@/types";
+import type { SunExposure, CellData, GardenType, BedFacing } from "@/types";
 
 // NOTE: @auth0/nextjs-auth0@3.5.0 causes Next.js 15 cookies warnings
 // This doesn't break functionality, but generates console warnings
@@ -75,7 +75,7 @@ export async function PUT(request: Request, context: RouteContext) {
     }
 
     const body = await request.json();
-    const { name, widthFt, lengthFt, sunExposure, gardenType, color, gardenId } = body;
+    const { name, widthFt, lengthFt, sunExposure, gardenType, facing, color, gardenId } = body;
 
     // Validation
     const updateData: {
@@ -84,6 +84,7 @@ export async function PUT(request: Request, context: RouteContext) {
       lengthFt?: number;
       sunExposure?: string;
       gardenType?: string;
+      facing?: string;
       color?: string;
       gardenId?: string | null;
       cells?: Record<string, CellData>;
@@ -165,6 +166,14 @@ export async function PUT(request: Request, context: RouteContext) {
         );
       }
       updateData.color = color;
+    }
+
+    if (facing !== undefined) {
+      const validFacings: BedFacing[] = ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"];
+      if (!validFacings.includes(facing)) {
+        return NextResponse.json({ error: "Invalid facing direction" }, { status: 400 });
+      }
+      updateData.facing = facing;
     }
 
     if (gardenId !== undefined) {

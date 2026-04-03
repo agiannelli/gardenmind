@@ -8,7 +8,7 @@ import {
   cellKey,
   getOccupiedCells,
 } from "@/lib/bedUtils";
-import type { CellData, Bed, SunExposure, GardenType } from "@/types";
+import type { BedFacing, CellData, Bed, SunExposure, GardenType } from "@/types";
 
 // Required for Next.js 15 cookies() API
 export const dynamic = 'force-dynamic';
@@ -72,6 +72,7 @@ export async function POST(request: Request, context: RouteContext) {
       ...bed,
       sunExposure: bed.sunExposure as SunExposure,
       gardenType: (bed.gardenType as GardenType) || "square-foot",
+      facing: (bed.facing as BedFacing) || "south",
       cells: (bed.cells as unknown) as Record<string, CellData>,
       createdAt: bed.createdAt.toISOString(),
       updatedAt: bed.updatedAt.toISOString(),
@@ -189,6 +190,7 @@ export async function DELETE(request: Request, context: RouteContext) {
       ...bed,
       sunExposure: bed.sunExposure as SunExposure,
       gardenType: (bed.gardenType as GardenType) || "square-foot",
+      facing: (bed.facing as BedFacing) || "south",
       cells,
       createdAt: bed.createdAt.toISOString(),
       updatedAt: bed.updatedAt.toISOString(),
