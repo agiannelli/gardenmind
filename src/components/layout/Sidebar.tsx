@@ -7,6 +7,7 @@ import { useBeds } from "@/hooks/useBeds";
 
 const SIDEBAR_NAV = [
   { href: "/planner",    icon: "🗺️",  label: "Planner" },
+  { href: "/library",    icon: "📚",  label: "Library" },
   { href: "/journal",    icon: "📖",  label: "Journal" },
   { href: "/calendar",   icon: "📅",  label: "Calendar" },
   { href: "/ai-advisor", icon: "✦",   label: "AI Advisor" },
